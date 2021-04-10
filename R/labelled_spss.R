@@ -38,8 +38,13 @@ labelled_spss <- function(x = double(), labels = NULL, na_values = NULL,
 }
 
 new_labelled_spss <- function(x, labels, na_values, na_range, label) {
-  if (!is.null(na_values) && any(is.na(na_values))) {
-    abort("`na_values` can not contain missing values.")
+
+  declared <- logical(length(x))
+  if (!is.null(na_values)) {
+    declared <- x %in% na_values
+    if (any(is.na(na_values))) {
+      abort("`na_values` can not contain missing values.")
+    }
   }
 
   if (!is.null(na_range)) {
@@ -54,14 +59,34 @@ new_labelled_spss <- function(x, labels, na_values, na_range, label) {
     if (na_range[1] >= na_range[2]) {
       abort("`na_range` must be in ascending order.")
     }
+
+    declared <- declared | (declared >= na_range[1] & declared <= na_range[2])
   }
+
+  rev_letters <- rev(letters)
+  if (any(is_tagged_na(x))) {
+    rev_letters <- setdiff(rev_letters, na_tag(x[is_tagged_na(x)]))
+  }
+  
+  missing <- sort(unique(x[declared]))
+  if (length(missing) > length(rev_letters)) {
+    abort("Too many declared missing values.")
+  }
+
+  for (i in seq(length(missing))) {
+    x[x == missing[i]] <- tagged_na(rev_letters[i])
+  }
+
+  names(missing) <- rev_letters[seq(length(missing))]
 
   new_labelled(x,
     labels = labels,
     label = label,
+    missing = missing,
     na_values = na_values,
     na_range = na_range,
-    class = "haven_labelled_spss"
+    class = "haven_labelled"
+    #class = "haven_labelled_spss"
   )
 }
 

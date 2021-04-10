@@ -160,6 +160,15 @@ format.haven_labelled <- function(x, ..., digits = getOption("digits")) {
 
 #' @export
 obj_print_footer.haven_labelled <- function(x, ...) {
+  na_values <- attr(x, "na_values")
+  if (!is.null(na_values)) {
+    cat_line("Missing values: ", paste(na_values, collapse = ", "))
+  }
+
+  na_range <- attr(x, "na_range")
+  if (!is.null(na_range)) {
+    cat_line("Missing range:  [", paste(na_range, collapse = ", "), "]")
+  }
   print_labels(x)
 }
 
@@ -342,5 +351,3 @@ vec_arith.numeric.haven_labelled <- function(op, x, y, ...) {
 vec_math.haven_labelled <- function(.fn, .x, ...) {
   vec_math_base(.fn, .x, ...)
 }
-
-
